@@ -3,7 +3,7 @@ package com.example.claptofindmyphone_version2.model.utilities;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import org.dalol.phonefinder.model.constant.Constant;
+import com.example.claptofindmyphone_version2.model.constant.Constant;
 
 /**
  * Created by Filippo-TheAppExpert on 7/19/2015.

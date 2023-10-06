@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
-
 import com.example.claptofindmyphone_version2.model.constant.Constant;
 import com.example.claptofindmyphone_version2.model.helper.DetectorThread;
 import com.example.claptofindmyphone_version2.model.helper.DetectorType;
@@ -21,9 +20,11 @@ public class DetectionService extends Service implements DetectorThread.OnSoundL
     private static final String TAG = DetectionService.class.getSimpleName();
     private DetectorThread mDetectorThread;
     private RecorderThread mRecorderThread;
+    private static Context mContext;
 
 
     public static void startDetection(Context context) {
+        mContext = context;
         Toast.makeText(context, "Detection Service Started!", Toast.LENGTH_SHORT).show();
         context.startService(new Intent(context, DetectionService.class));
     }
@@ -77,23 +78,17 @@ public class DetectionService extends Service implements DetectorThread.OnSoundL
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        mRecorderThread = new RecorderThread();
+        mRecorderThread = new RecorderThread(mContext);
         mRecorderThread.startRecording();
-        String detectionType = SharedPreferenceUtils.getValue(getApplicationContext(), Constant.DETECTION_TYPE_PREFERENCE);
-        if (detectionType == null) {
+//        String detectionType = SharedPreferenceUtils.getValue(getApplicationContext(), Constant.DETECTION_TYPE_PREFERENCE);
+        String detectionType = DetectorType.CLAP.name();
+        if (detectionType == null || detectionType.equals(DetectorType.WHISTLE.name())) {
             mDetectorThread = new DetectorThread(mRecorderThread, DetectorType.WHISTLE);
         } else {
-            if (detectionType.equals(DetectorType.CLAP.name())) {
-                mDetectorThread = new DetectorThread(mRecorderThread, DetectorType.CLAP);
-            } else {
-                mDetectorThread = new DetectorThread(mRecorderThread, DetectorType.WHISTLE);
-            }
+            mDetectorThread = new DetectorThread(mRecorderThread, DetectorType.CLAP);
         }
-
         mDetectorThread.setOnSoundListener(this);
         mDetectorThread.start();
-
     }
 
     @Override

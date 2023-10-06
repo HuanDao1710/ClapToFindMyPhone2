@@ -19,17 +19,13 @@ public class Controller {
     }
 
 
-    public void browseCode() {
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setData(Uri.parse(Constant.GITHUB_LINK));
-        mListener.start(intent);
-    }
 
     public synchronized void startDetection() {
-        boolean status = Boolean.parseBoolean(SharedPreferenceUtils.getValue(mListener.getMainControllerContext(), Constant.ENABLE_PREFERENCE));
-        if (status) {
+
+//        boolean status = Boolean.parseBoolean(SharedPreferenceUtils.getValue(mListener.getMainControllerContext(), Constant.ENABLE_PREFERENCE));
+//        if (status) {
             DetectionService.startDetection(mListener.getMainControllerContext());;
-        }
+//        }
     }
 
     public void stopDetection() {

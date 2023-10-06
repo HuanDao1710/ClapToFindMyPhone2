@@ -12,18 +12,25 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  * musicg api in Google Code: http://code.google.com/p/musicg/
  * Android Application in Google Play: https://play.google.com/store/apps/details?id=com.whistleapp
- * 
+ *
  */
 
 package com.example.claptofindmyphone_version2.model.helper;
 
+import android.Manifest;
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.util.Log;
+import androidx.core.app.ActivityCompat;
+
+import com.example.claptofindmyphone_version2.MainActivity;
+import com.example.claptofindmyphone_version2.model.constant.Constant;
 
 public class RecorderThread extends Thread {
 
@@ -35,16 +42,23 @@ public class RecorderThread extends Thread {
     private int frameByteSize; // for 1024 fft size (16bit sample size)
     byte[] buffer;
 
-    public RecorderThread() {
+    public RecorderThread(Context context) {
         sampleRate = 44100;
         frameByteSize = 1024 * 2;
 
         channelConfiguration = AudioFormat.CHANNEL_IN_MONO;
         audioEncoding = AudioFormat.ENCODING_PCM_16BIT;
-
+//
         int recBufSize = AudioRecord.getMinBufferSize(sampleRate,
                 channelConfiguration, audioEncoding); // need to be larger than
+
+
         // size of a frame
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions((MainActivity) context,
+                    new String[]{android.Manifest.permission.RECORD_AUDIO},
+                    Constant.PERMISSION_REQUEST_CODE);
+        }
         audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC,
                 sampleRate, channelConfiguration, audioEncoding, recBufSize);
         buffer = new byte[frameByteSize];
@@ -103,6 +117,7 @@ public class RecorderThread extends Thread {
 
         // no input
         if (averageAbsValue < 30) {
+            Log.e("NO INPUT", "avg: " + averageAbsValue);
             return null;
         }
 

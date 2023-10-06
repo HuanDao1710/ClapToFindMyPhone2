@@ -15,6 +15,7 @@ import androidx.core.app.NotificationCompat;
 
 import com.example.claptofindmyphone_version2.R;
 import com.example.claptofindmyphone_version2.MainActivity;
+import com.example.claptofindmyphone_version2.model.constant.Constant;
 
 /**
  * Created by Filippo-TheAppExpert on 8/10/2015.
@@ -107,7 +108,7 @@ public class SoundNotificationService extends Service implements MediaPlayer.OnP
 
         // Build notification
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, Constant.CHANEL_NOTIFICATION_ID)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setTicker("ፉጨት Phone Finder")
                 .setContentTitle("My notification")
