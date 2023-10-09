@@ -7,7 +7,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
+import android.os.Build;
 import android.os.IBinder;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
+import android.os.VibratorManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -26,6 +30,12 @@ public class SoundNotificationService extends Service implements MediaPlayer.OnP
     private MediaPlayer mPlayer;
     private boolean mRunning;
 
+    final int DELAY = 0, VIBRATE = 1000, SLEEP = 1000, START = -1;
+    long[] vibratePattern = {DELAY, VIBRATE, SLEEP};
+    //Rung
+    VibratorManager vibratorManager;
+    Vibrator vibrator;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -34,6 +44,9 @@ public class SoundNotificationService extends Service implements MediaPlayer.OnP
         mPlayer.setOnCompletionListener(this);
         mPlayer.setOnErrorListener(this);
         mPlayer.setOnPreparedListener(this);
+
+        vibratorManager = (VibratorManager) this.getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
+        vibrator = vibratorManager.getDefaultVibrator();
     }
 
     @Override
@@ -70,8 +83,21 @@ public class SoundNotificationService extends Service implements MediaPlayer.OnP
             mRunning = true;
             createNotification();
             mPlayer.start();
+            vibrate();
         }
         return super.onStartCommand(intent, flags, startId);
+    }
+
+    private void vibrate () {
+
+        // this is the only type of the vibration which requires system version Oreo (API 26)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createWaveform(vibratePattern, START));
+            return;
+        }
+        // noinspection deprecation
+        vibrator.vibrate(vibratePattern, START);
+
     }
 
     public void onStop() {

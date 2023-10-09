@@ -19,49 +19,51 @@ public class CustomClapAPI extends DetectionApi {
     }
     protected void init(){
         // settings for detecting a clap
-        minFrequency = 600.0f;
-        maxFrequency = 3200.0f;
+        minFrequency = 700.0f;
+        maxFrequency = 2000.0f;
 
         // get the decay part of a clap
         minIntensity = 10000.0f;
         maxIntensity = 100000.0f;
 
         minStandardDeviation = 0.0f;
-        maxStandardDeviation = 0.5f;
+        maxStandardDeviation = 0.1f;
 
         highPass = 100;
         lowPass = 10000;
 
-        minNumZeroCross = 50;
+        minNumZeroCross = 60;
         maxNumZeroCross = 300;
-
-        numRobust = 3;
+        numRobust = 4;
     }
 
 
-    @Override
-    protected boolean isPassedFrequency(double[] spectrum){
-        // find the robust frequency
-        ArrayRankDouble arrayRankDouble = new ArrayRankDouble();
-        double robustFrequency = arrayRankDouble.getMaxValueIndex(spectrum) * unitFrequency;
-
-        // frequency of the sound should not be too low or too high
-        boolean result = (robustFrequency >= minFrequency && robustFrequency <= maxFrequency);
-        //System.out.println("freq: " + robustFrequency + " " + result);
-        return result;
+    void setMinIntensity(double intensity) {
+        this.minIntensity = intensity;
     }
-    //
     @Override
     protected boolean isPassedZeroCrossingRate(short[] amplitudes){
         ZeroCrossingRate zcr = new ZeroCrossingRate(amplitudes, 1);
         int numZeroCrosses = (int) zcr.evaluate();
+//        try{
+//            if(numZeroCrosses > 50) {
+//                System.out.println("CrossingRate: " + numZeroCrosses) ;
+//                Thread.sleep(2000);
+//            }
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+
         // different sound has different range of zero crossing value
         // when lengthInSecond=1, zero crossing rate is the num
         // of zero crosses
         boolean result = (numZeroCrosses >= minNumZeroCross && numZeroCrosses <= maxNumZeroCross);
         //System.out.println("zcr: " + numZeroCrosses + " " +result);
+
         return result;
     }
+
 
     @Override
     public boolean isSpecificSound(byte[] audioBytes) {
@@ -89,15 +91,33 @@ public class CustomClapAPI extends DetectionApi {
             double[] rangedSpectrum = new double[frequencyUnitRange];
             System.arraycopy(spectrum, lowerBoundary, rangedSpectrum, 0, rangedSpectrum.length);
             if (frequencyUnitRange <= spectrum.length) {
-                // run all checking for debug
-                boolean isPassedChecking = true;
-                // rule 1: check the intensity of this frame
-                isPassedChecking &= isPassedIntensity(spectrum);
-                isPassedChecking &= isPassedFrequency(rangedSpectrum);
-                // rule 4: check the standard deviation of this frame with reference of previous frames
-                isPassedChecking &= isPassedStandardDeviation(spectrogramData);
-                System.out.println("Result: " + isPassedChecking + "\n");
-                return isPassedChecking;
+                try {
+                    // run all checking for debug
+                    boolean isPassedChecking = true;
+                    isPassedChecking &= isPassedIntensity(spectrum);
+//                    if (isPassedChecking) {
+//                        Log.d("TAG", "isSpecificSound: isPassedIntensity");
+//                        Thread.sleep(2000);
+//                    }
+                    isPassedChecking &= isPassedFrequency(rangedSpectrum);
+//                    if (isPassedChecking) {
+//                        Log.d("TAG", "isSpecificSound: " + "isPassedFrequency");
+//                        Thread.sleep(2000);
+//                    }
+                    isPassedChecking &= isPassedStandardDeviation(spectrogramData);
+//                    if (isPassedChecking) {
+//                        Log.d("TAG", "isSpecificSound: isPassedStandardDeviation");
+//                        Thread.sleep(2000);
+//                    }
+                    isPassedChecking &= isPassedZeroCrossingRate(amplitudes);
+//                    if (isPassedChecking) {
+//                        Log.d("TAG", "isSpecificSound: isPassedZeroCrossingRate");
+//                        Thread.sleep(2000);
+//                    }
+                    return isPassedChecking;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 // end run all checking for debug
             }
         }

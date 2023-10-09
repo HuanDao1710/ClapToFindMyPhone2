@@ -23,6 +23,8 @@ public class DetectorThread extends Thread {
     private int whistleCheckLength = 2;
     private int whistlePassScore = 2;
     int minDistance = 200;
+
+    int thresholdMinDistance = 50;
     int maxDistance = 1000;
     private OnSoundListener onSoundListener;
     private int requiredClapCount = 3;
@@ -166,7 +168,7 @@ public class DetectorThread extends Thread {
                 long currentTime = System.currentTimeMillis();
                 if(claps.size() > 0 ) {
                     long distance = currentTime - claps.get(claps.size() - 1);
-                    if(distance > maxDistance) {
+                    if(distance > maxDistance ) {
                         claps.clear();
                     }
                     if(distance < minDistance) {
@@ -178,10 +180,10 @@ public class DetectorThread extends Thread {
                 if(claps.size() >= requiredClapCount){
                     claps.clear();
                     Log.d("TAG","Claps Detected!");
-                    Thread.sleep(2000);
                     if (onSoundListener != null) {
                         onSoundListener.onSound(mType);
                     }
+                    Thread.sleep(2000);
                 }
             } catch (Exception e) {
                 e.printStackTrace();

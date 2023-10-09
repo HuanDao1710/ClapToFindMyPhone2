@@ -1,23 +1,3 @@
-/*
- * Copyright (C) 2012 Jacquet Wong
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * musicg api in Google Code: http://code.google.com/p/musicg/
- * Android Application in Google Play: https://play.google.com/store/apps/details?id=com.whistleapp
- *
- */
-
 package com.example.claptofindmyphone_version2.model.helper;
 
 import android.Manifest;
@@ -31,18 +11,21 @@ import androidx.core.app.ActivityCompat;
 
 import com.example.claptofindmyphone_version2.MainActivity;
 import com.example.claptofindmyphone_version2.model.constant.Constant;
-
 public class RecorderThread extends Thread {
-
 
     private AudioRecord audioRecord;
     private int channelConfiguration;
     private int audioEncoding;
     private int sampleRate;
+    private int overLapByteSize;
+    private int byteStepSize;
     private int frameByteSize; // for 1024 fft size (16bit sample size)
     byte[] buffer;
 
+    private byte[] overlapBuffer;
+
     public RecorderThread(Context context) {
+
         sampleRate = 44100;
         frameByteSize = 1024 * 2;
 
@@ -50,10 +33,8 @@ public class RecorderThread extends Thread {
         audioEncoding = AudioFormat.ENCODING_PCM_16BIT;
 //
         int recBufSize = AudioRecord.getMinBufferSize(sampleRate,
-                channelConfiguration, audioEncoding); // need to be larger than
+                channelConfiguration, audioEncoding); // need to be larger than size of a frame
 
-
-        // size of a frame
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions((MainActivity) context,
                     new String[]{android.Manifest.permission.RECORD_AUDIO},
@@ -62,7 +43,10 @@ public class RecorderThread extends Thread {
         audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC,
                 sampleRate, channelConfiguration, audioEncoding, recBufSize);
         buffer = new byte[frameByteSize];
+        overlapBuffer = new byte[overLapByteSize];
     }
+
+
 
     public AudioRecord getAudioRecord() {
         return audioRecord;
@@ -84,6 +68,7 @@ public class RecorderThread extends Thread {
         }
     }
 
+
     public void stopRecording() {
         try {
             audioRecord.stop();
@@ -98,6 +83,56 @@ public class RecorderThread extends Thread {
         int amplitude = (buffer[0] & 0xff) << 8 | buffer[1];
         return Math.abs(amplitude);
     }
+
+    private void initOverlapAndStepSize() {
+        assert overLapByteSize < frameByteSize;
+
+        byteStepSize = frameByteSize - overLapByteSize;
+    }
+
+    public byte[] getNextBlock() {
+        int bytesRead = audioRecord.read(buffer, 0, frameByteSize);
+        if (bytesRead <= 0) {
+            return null;
+        }
+
+        byte[] frame = new byte[frameByteSize];
+        System.arraycopy(buffer, 0, frame, 0, frameByteSize);
+
+        // Lưu trữ phần overlap từ frame hiện tại
+        System.arraycopy(buffer, byteStepSize, overlapBuffer, 0, overLapByteSize);
+
+        // Dịch chuyển buffer theo byteStepSize
+        System.arraycopy(buffer, byteStepSize, buffer, 0, overLapByteSize);
+
+        // Sao chép phần overlap vào cuối buffer
+        System.arraycopy(overlapBuffer, 0, buffer, overLapByteSize, overLapByteSize);
+
+        // Phân tích âm thanh
+        int totalAbsValue = 0;
+        short sample = 0;
+        float averageAbsValue = 0.0f;
+
+        for (int i = 0; i < frameByteSize; i += 2) {
+            sample = (short) ((frame[i]) | frame[i + 1] << 8);
+            totalAbsValue += Math.abs(sample);
+        }
+        averageAbsValue = totalAbsValue / frameByteSize / 2;
+
+        Log.e("", "averageAbsValue : " + averageAbsValue);
+
+        // Không có đầu vào
+        if (averageAbsValue < 30) {
+            Log.e("NO INPUT", "avg: " + averageAbsValue);
+            return null;
+        }
+
+        return frame;
+    }
+
+
+
+
 
     public byte[] getFrameBytes() {
         audioRecord.read(buffer, 0, frameByteSize);

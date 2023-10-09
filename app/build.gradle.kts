@@ -3,6 +3,13 @@ plugins {
     id("com.android.application")
 }
 
+tasks.register<Wrapper>("wrapper") {
+    gradleVersion = "8.1.1"
+}
+
+tasks.register("prepareKotlinBuildScriptModel") {
+}
+
 android {
     namespace = "com.example.claptofindmyphone_version2"
     compileSdk = 33
@@ -27,8 +34,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 

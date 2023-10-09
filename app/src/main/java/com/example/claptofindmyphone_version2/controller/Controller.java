@@ -7,9 +7,6 @@ import com.example.claptofindmyphone_version2.model.service.DetectionService;
 import com.example.claptofindmyphone_version2.model.utilities.SharedPreferenceUtils;
 import com.example.claptofindmyphone_version2.MainActivity;
 
-/**
- * Created by Filippo-TheAppExpert on 8/10/2015.
- */
 public class Controller {
 
     private ControllerListener mListener;

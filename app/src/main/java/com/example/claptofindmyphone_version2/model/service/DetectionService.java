@@ -121,8 +121,8 @@ public class DetectionService extends Service implements DetectorThread.OnSoundL
     @Override
     public void onSound(DetectorType type) {
 
-        boolean status = Boolean.parseBoolean(SharedPreferenceUtils.getValue(getApplicationContext(), Constant.ENABLE_PREFERENCE));
-        if (status) {
+//        boolean status = Boolean.parseBoolean(SharedPreferenceUtils.getValue(getApplicationContext(), Constant.ENABLE_PREFERENCE));
+        if (true) {
             startService(new Intent(DetectionService.this, SoundNotificationService.class));
         }
     }
